@@ -1,0 +1,10 @@
+# Ignore images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+
+# Ignore diagrams folder for now (as per user request "without images after if tell then uploads images or digram folder")
+diagrams/
