@@ -43,19 +43,26 @@ class FirebaseApiService {
   }
 
   async seedInitialData() {
-    const deptSnap = await getDocs(collection(db, 'departments'));
-    if (deptSnap.empty) {
-      console.log('Seeding initial data to Firebase...');
-      
-      // Seed Departments
-      for (const dept of DEPARTMENTS) {
-        await setDoc(doc(db, 'departments', String(dept.id)), dept);
+    try {
+      const deptSnap = await getDocs(collection(db, 'departments'));
+      const docSnap = await getDocs(collection(db, 'doctors'));
+
+      // If data is missing or significantly less than mockData, re-seed
+      if (deptSnap.size < DEPARTMENTS.length) {
+        console.log('Seeding/Updating departments in Firebase...');
+        for (const dept of DEPARTMENTS) {
+          await setDoc(doc(db, 'departments', String(dept.id)), dept);
+        }
       }
 
-      // Seed Doctors
-      for (const docObj of DOCTORS) {
-        await setDoc(doc(db, 'doctors', String(docObj.id)), docObj);
+      if (docSnap.size < DOCTORS.length) {
+        console.log('Seeding/Updating doctors in Firebase...');
+        for (const docObj of DOCTORS) {
+          await setDoc(doc(db, 'doctors', String(docObj.id)), docObj);
+        }
       }
+    } catch (error) {
+      console.warn("Firebase Notice: Firestore database is not yet initialized or accessible. Please create it in your Firebase Console to enable persistent data.", error.message);
     }
   }
 

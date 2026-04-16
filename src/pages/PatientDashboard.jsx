@@ -152,7 +152,7 @@ class PatientDashboard extends React.Component {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
                   {filteredDoctors.map(doc => (
-                    <div key={doc.id} className="premium-card" style={{ background: 'rgba(15, 23, 42, 0.3)' }}>
+                    <div key={doc.id} className="premium-card" style={{ background: '#ffffff' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                         <div className="glass" style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--primary)' }}>
                           <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{doc.name[4]}</span>
@@ -189,7 +189,7 @@ class PatientDashboard extends React.Component {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {this.state.prescriptions.map(pres => (
-                      <div key={pres.id} className="glass" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)' }}>
+                      <div key={pres.id} className="glass" style={{ padding: '1.5rem', background: '#ffffff' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                           <h3 style={{ margin: 0 }}>Dr. {pres.doctorName || 'General Practitioner'}</h3>
                           <span style={{ color: 'var(--text-dim)', fontSize: '0.875rem' }}>{pres.date}</span>
@@ -229,7 +229,7 @@ class PatientDashboard extends React.Component {
                   <p style={{ color: 'var(--text-dim)', fontSize: '0.875rem', textAlign: 'center', padding: '1rem' }}>No upcoming appointments</p>
                 ) : (
                   appointments.map(appt => (
-                    <div key={appt.id} className="glass" style={{ padding: '1rem', background: 'rgba(255, 255, 255, 0.03)' }}>
+                    <div key={appt.id} className="glass" style={{ padding: '1rem', background: '#ffffff' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: '600', color: appt.status === 'CONFIRMED' ? 'var(--success)' : 'var(--text-dim)' }}>
                           {appt.status}
@@ -287,7 +287,7 @@ class PatientDashboard extends React.Component {
                           border: selectedSlot === slot.time ? '2px solid var(--primary)' : '1px solid var(--border)',
                           opacity: slot.available ? 1 : 0.4,
                           cursor: slot.available ? 'pointer' : 'not-allowed',
-                          background: selectedSlot === slot.time ? 'rgba(79, 70, 229, 0.2)' : 'transparent'
+                          background: selectedSlot === slot.time ? 'rgba(14, 165, 233, 0.1)' : 'transparent'
                         }}
                       >
                         {slot.time}

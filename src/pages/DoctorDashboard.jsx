@@ -104,7 +104,7 @@ class DoctorDashboard extends React.Component {
                 pending.map(appt => (
                   <div key={appt.id} className="premium-card glass" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                      <div className="glass" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyCenter: 'center', background: 'rgba(255,255,255,0.05)' }}>
+                      <div className="glass" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-deep)' }}>
                         <User size={20} color="var(--text-dim)" />
                       </div>
                       <div>
@@ -121,7 +121,7 @@ class DoctorDashboard extends React.Component {
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                       <button 
                         className="btn-primary" 
-                        style={{ width: 'auto', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', border: '1px solid var(--border)' }}
+                        style={{ width: 'auto', background: '#f1f5f9', color: 'var(--text-main)', border: '1px solid var(--border)' }}
                         onClick={() => this.handleStatusUpdate(appt.id, 'CANCELLED')}
                       >
                         Cancel
@@ -212,7 +212,7 @@ class DoctorDashboard extends React.Component {
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                <button className="btn-primary" style={{ background: '#334155' }} onClick={() => this.setState({ completingAppt: null })}>Close</button>
+                <button className="btn-primary" style={{ background: '#94a3b8' }} onClick={() => this.setState({ completingAppt: null })}>Close</button>
                 <button className="btn-primary" onClick={this.submitPrescription}>Save & Finalize</button>
               </div>
             </div>

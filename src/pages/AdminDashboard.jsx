@@ -150,7 +150,7 @@ class AdminDashboard extends React.Component {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
                 {departments.map(dept => (
-                  <div key={dept.id} className="glass" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)' }}>
+                  <div key={dept.id} className="glass" style={{ padding: '1.5rem', background: '#ffffff' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                       <Building color="var(--primary)" size={24} />
                       <button 
@@ -172,7 +172,7 @@ class AdminDashboard extends React.Component {
         {/* Add Department Modal */}
         {this.state.showAddModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="glass auth-card" style={{ maxWidth: '500px', textAlign: 'left' }}>
+            <div className="glass auth-card" style={{ maxWidth: '500px', textAlign: 'left', border: 'none' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>Create New Department</h2>
               <form onSubmit={this.handleAddDept}>
                 <div className="form-group">
@@ -198,7 +198,7 @@ class AdminDashboard extends React.Component {
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                  <button type="button" className="btn-primary" style={{ background: '#334155' }} onClick={() => this.setState({ showAddModal: false })}>Cancel</button>
+                  <button type="button" className="btn-primary" style={{ background: '#94a3b8' }} onClick={() => this.setState({ showAddModal: false })}>Cancel</button>
                   <button type="submit" className="btn-primary">Create Department</button>
                 </div>
               </form>
