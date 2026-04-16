@@ -21,8 +21,7 @@ class AdminDashboard extends React.Component {
     this.setState({ loading: true });
     try {
       const [users, depts] = await Promise.all([
-        // Mock get all users - we'll just use the list from service
-        Promise.resolve(apiService.users),
+        apiService.getAllUsers(),
         apiService.getDepartments()
       ]);
       this.setState({ users, departments: depts, loading: false });
