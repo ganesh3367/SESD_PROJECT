@@ -17,21 +17,51 @@ class App extends React.Component {
     super(props);
     this.state = {
       user: apiService.currentUser,
-      loading: false
+      loading: true
     };
+  }
+
+  componentDidMount() {
+    // Listen for auth changes from Firebase via our service
+    const checkAuth = () => {
+      this.setState({ 
+        user: apiService.currentUser,
+        loading: false 
+      });
+    };
+
+    // Poll for current user if it takes a moment to load from storage/firebase
+    this.authInterval = setInterval(checkAuth, 500);
+    
+    // Initial check
+    checkAuth();
+  }
+
+  componentWillUnmount() {
+    if (this.authInterval) clearInterval(this.authInterval);
   }
 
   handleLogin = (user) => {
     this.setState({ user });
   };
 
-  handleLogout = () => {
-    apiService.logout();
+  handleLogout = async () => {
+    await apiService.logout();
     this.setState({ user: null });
   };
 
   render() {
-    const { user } = this.state;
+    const { user, loading } = this.state;
+
+    if (loading) {
+      return (
+        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-dark)' }}>
+          <div className="glass" style={{ padding: '2rem', borderRadius: '12px' }}>
+            <p style={{ color: 'var(--primary)' }}>Initialising Secure Connection...</p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <Router>
