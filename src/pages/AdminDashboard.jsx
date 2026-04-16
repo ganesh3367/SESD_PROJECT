@@ -9,7 +9,10 @@ class AdminDashboard extends React.Component {
       users: [],
       departments: [],
       loading: true,
-      activeTab: 'users'
+      activeTab: 'users',
+      showAddModal: false,
+      newDeptName: '',
+      newDeptDesc: ''
     };
   }
 
@@ -40,6 +43,20 @@ class AdminDashboard extends React.Component {
     if (window.confirm('Are you sure you want to delete this department?')) {
       await apiService.deleteDepartment(deptId);
       this.fetchData();
+    }
+  };
+
+  handleAddDept = async (e) => {
+    e.preventDefault();
+    const { newDeptName, newDeptDesc } = this.state;
+    if (!newDeptName) return;
+
+    try {
+      await apiService.addDepartment({ name: newDeptName, description: newDeptDesc });
+      this.setState({ showAddModal: false, newDeptName: '', newDeptDesc: '' });
+      this.fetchData();
+    } catch (err) {
+      alert('Failed to add department: ' + err.message);
     }
   };
 
@@ -122,7 +139,11 @@ class AdminDashboard extends React.Component {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.25rem' }}>Departments</h2>
-                <button className="btn-primary" style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button 
+                  className="btn-primary" 
+                  style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onClick={() => this.setState({ showAddModal: true })}
+                >
                   <Plus size={18} />
                   Add Department
                 </button>
@@ -147,6 +168,43 @@ class AdminDashboard extends React.Component {
             </div>
           )}
         </div>
+
+        {/* Add Department Modal */}
+        {this.state.showAddModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="glass auth-card" style={{ maxWidth: '500px', textAlign: 'left' }}>
+              <h2 style={{ marginBottom: '1.5rem' }}>Create New Department</h2>
+              <form onSubmit={this.handleAddDept}>
+                <div className="form-group">
+                  <label className="form-label">Department Name</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={this.state.newDeptName}
+                    onChange={(e) => this.setState({ newDeptName: e.target.value })}
+                    placeholder="e.g. Oncology"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea 
+                    className="form-input" 
+                    rows="3"
+                    value={this.state.newDeptDesc}
+                    onChange={(e) => this.setState({ newDeptDesc: e.target.value })}
+                    placeholder="Describe the department specialty..."
+                    style={{ resize: 'none' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                  <button type="button" className="btn-primary" style={{ background: '#334155' }} onClick={() => this.setState({ showAddModal: false })}>Cancel</button>
+                  <button type="submit" className="btn-primary">Create Department</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

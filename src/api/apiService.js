@@ -271,7 +271,7 @@ class FirebaseApiService {
 
   async getAllUsers() {
     const snap = await getDocs(collection(db, 'users'));
-    return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    return snap.docs.map(d => ({ uid: d.id, id: d.id, ...d.data() }));
   }
 }
 
