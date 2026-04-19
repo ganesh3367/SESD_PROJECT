@@ -15,24 +15,21 @@ class DoctorDashboard extends React.Component {
     };
   }
 
-  async componentDidMount() {
-    this.fetchAppointments();
+  componentDidMount() {
+    this.setState({ loading: true });
+    this.unsubscribeAppts = apiService.subscribeToMyAppointments(this.props.user.id, 'DOCTOR', (appts) => {
+      this.setState({ appointments: appts, loading: false });
+    });
   }
 
-  fetchAppointments = async () => {
-    this.setState({ loading: true });
-    try {
-      const appts = await apiService.getMyAppointments(this.props.user.id, 'DOCTOR');
-      this.setState({ appointments: appts, loading: false });
-    } catch (err) {
-      console.error(err);
-      this.setState({ loading: false });
+  componentWillUnmount() {
+    if (this.unsubscribeAppts) {
+      this.unsubscribeAppts();
     }
-  };
+  }
 
   handleStatusUpdate = async (id, status) => {
     await apiService.updateAppointmentStatus(id, status);
-    this.fetchAppointments();
   };
 
   openPrescription = (appt) => {

@@ -15,7 +15,8 @@ import {
   query, 
   where, 
   deleteDoc,
-  serverTimestamp
+  serverTimestamp,
+  onSnapshot
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { USERS, DOCTORS, DEPARTMENTS, INITIAL_APPOINTMENTS } from './mockData';
@@ -137,8 +138,17 @@ class FirebaseApiService {
 
   // --- DOCTORS ---
   async getDoctors(filters = {}) {
-    const docsSnap = await getDocs(collection(db, 'doctors'));
-    let doctors = docsSnap.docs.map(d => d.data());
+    let doctors = [];
+    try {
+      const docsSnap = await getDocs(collection(db, 'doctors'));
+      doctors = docsSnap.docs.map(d => d.data());
+    } catch (e) {
+      console.warn('Failed to fetch doctors, using mock data:', e);
+    }
+    
+    if (doctors.length === 0) {
+      doctors = [...DOCTORS];
+    }
 
     if (filters.specialization) {
       doctors = doctors.filter(d => d.specialization.toLowerCase().includes(filters.specialization.toLowerCase()));
@@ -150,12 +160,26 @@ class FirebaseApiService {
   }
 
   async getDoctorSlots(doctorId, date) {
-    const docRef = doc(db, 'doctors', String(doctorId));
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return [];
+    let doctor = null;
+    try {
+      const docRef = doc(db, 'doctors', String(doctorId));
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        doctor = docSnap.data();
+      }
+    } catch (e) {
+      console.warn("Failed fetching slots doctor", e);
+    }
+    
+    if (!doctor) {
+      doctor = DOCTORS.find(d => String(d.id) === String(doctorId));
+    }
 
-    const doctor = docSnap.data();
-    const day = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+    if (!doctor) return [];
+
+    const [year, month, dayStr] = date.split('-');
+    const localDate = new Date(year, month - 1, dayStr);
+    const day = localDate.toLocaleDateString('en-US', { weekday: 'long' });
     const availability = doctor.availability.find(a => a.day === day);
     
     if (!availability) return [];
@@ -216,19 +240,120 @@ class FirebaseApiService {
 
     // Enrich with names
     const enriched = await Promise.all(appointments.map(async (a) => {
-      const doctorSnap = await getDoc(doc(db, 'doctors', String(a.doctorId)));
-      // For patient name, we need to find the user with that UID
-      // Since patientId in appointments is currently UID (string) in Firebase
-      const patientSnap = await getDoc(doc(db, 'users', a.patientId));
+      let doctorName = 'Unknown Doctor';
+      let patientName = 'Unknown Patient';
+
+      try {
+        const doctorSnap = await getDoc(doc(db, 'doctors', String(a.doctorId)));
+        if (doctorSnap.exists()) doctorName = doctorSnap.data().name;
+        else {
+          const mockDoc = DOCTORS.find(d => String(d.id) === String(a.doctorId));
+          if (mockDoc) doctorName = mockDoc.name;
+        }
+
+        const patientSnap = await getDoc(doc(db, 'users', String(a.patientId)));
+        if (patientSnap.exists()) patientName = patientSnap.data().name;
+        else {
+          const mockUser = USERS.find(u => String(u.id) === String(a.patientId));
+          if (mockUser) patientName = mockUser.name;
+        }
+      } catch (e) {
+        console.warn("Error enriching name", e);
+      }
       
       return {
         ...a,
-        doctorName: doctorSnap.exists() ? doctorSnap.data().name : 'Unknown Doctor',
-        patientName: patientSnap.exists() ? patientSnap.data().name : 'Unknown Patient'
+        doctorName,
+        patientName
       };
     }));
 
     return enriched;
+  }
+
+  // Real-time listener for appointments
+  subscribeToMyAppointments(userId, role, callback) {
+    if (role === 'PATIENT') {
+      const q = query(collection(db, 'appointments'), where('patientId', '==', userId));
+      return onSnapshot(q, async (snap) => {
+        const appointments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const enriched = await Promise.all(appointments.map(async (a) => {
+          let doctorName = 'Unknown Doctor';
+          let patientName = 'Unknown Patient';
+          try {
+            const doctorSnap = await getDoc(doc(db, 'doctors', String(a.doctorId)));
+            if (doctorSnap.exists()) doctorName = doctorSnap.data().name;
+            else {
+              const mockDoc = DOCTORS.find(d => String(d.id) === String(a.doctorId));
+              if (mockDoc) doctorName = mockDoc.name;
+            }
+
+            const patientSnap = await getDoc(doc(db, 'users', String(a.patientId)));
+            if (patientSnap.exists()) patientName = patientSnap.data().name;
+            else {
+              const mockUser = USERS.find(u => String(u.id) === String(a.patientId));
+              if (mockUser) patientName = mockUser.name;
+            }
+          } catch (e) {
+            console.warn("Error enriching name", e);
+          }
+          return {
+            ...a,
+            doctorName,
+            patientName
+          };
+        }));
+        callback(enriched);
+      });
+    } else if (role === 'DOCTOR') {
+      let unsubscribe = null;
+      let active = true;
+      (async () => {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (!active) return;
+        const doctorId = userDoc.data()?.doctorId;
+        if (!doctorId) {
+          callback([]);
+          return;
+        }
+        const q = query(collection(db, 'appointments'), where('doctorId', '==', doctorId));
+        unsubscribe = onSnapshot(q, async (snap) => {
+          const appointments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          const enriched = await Promise.all(appointments.map(async (a) => {
+            let doctorName = 'Unknown Doctor';
+            let patientName = 'Unknown Patient';
+            try {
+              const doctorSnap = await getDoc(doc(db, 'doctors', String(a.doctorId)));
+              if (doctorSnap.exists()) doctorName = doctorSnap.data().name;
+              else {
+                const mockDoc = DOCTORS.find(d => String(d.id) === String(a.doctorId));
+                if (mockDoc) doctorName = mockDoc.name;
+              }
+
+              const patientSnap = await getDoc(doc(db, 'users', String(a.patientId)));
+              if (patientSnap.exists()) patientName = patientSnap.data().name;
+              else {
+                const mockUser = USERS.find(u => String(u.id) === String(a.patientId));
+                if (mockUser) patientName = mockUser.name;
+              }
+            } catch (e) {
+              console.warn("Error enriching name", e);
+            }
+            return {
+              ...a,
+              doctorName,
+              patientName
+            };
+          }));
+          callback(enriched);
+        });
+      })();
+      return () => {
+        active = false;
+        if (unsubscribe) unsubscribe();
+      };
+    }
+    return () => {};
   }
 
   async updateAppointmentStatus(id, status) {
@@ -255,8 +380,14 @@ class FirebaseApiService {
 
   // --- DEPARTMENTS ---
   async getDepartments() {
-    const snap = await getDocs(collection(db, 'departments'));
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    try {
+      const snap = await getDocs(collection(db, 'departments'));
+      if (snap.docs.length === 0) return DEPARTMENTS;
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.warn('Failed to fetch departments, using mock data:', e);
+      return DEPARTMENTS;
+    }
   }
 
   async addDepartment(deptData) {

@@ -21,20 +21,28 @@ class PatientDashboard extends React.Component {
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     this.fetchData();
+    this.unsubscribeAppts = apiService.subscribeToMyAppointments(this.props.user.id, 'PATIENT', (appts) => {
+      this.setState({ appointments: appts });
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeAppts) {
+      this.unsubscribeAppts();
+    }
   }
 
   fetchData = async () => {
     this.setState({ loading: true });
     try {
-      const [appts, docs, depts, pres] = await Promise.all([
-        apiService.getMyAppointments(this.props.user.id, 'PATIENT'),
+      const [docs, depts, pres] = await Promise.all([
         apiService.getDoctors(),
         apiService.getDepartments(),
         apiService.getMyPrescriptions(this.props.user.id)
       ]);
-      this.setState({ appointments: appts, doctors: docs, departments: depts, prescriptions: pres, loading: false });
+      this.setState({ doctors: docs, departments: depts, prescriptions: pres, loading: false });
     } catch (err) {
       console.error(err);
       this.setState({ loading: false });
@@ -77,7 +85,6 @@ class PatientDashboard extends React.Component {
         reason: 'General Consultation'
       });
       this.setState({ bookingDoctor: null });
-      this.fetchData();
       alert('Appointment booked successfully!');
     } catch (err) {
       alert('Failed to book: ' + err.message);
@@ -163,8 +170,12 @@ class PatientDashboard extends React.Component {
                         </div>
                       </div>
                       <h3 style={{ marginBottom: '0.25rem' }}>{doc.name}</h3>
-                      <p style={{ color: 'var(--primary)', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>{doc.specialization}</p>
-                      <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>{doc.bio}</p>
+                      <p style={{ color: 'var(--primary)', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' }}>{doc.specialization}</p>
+                      <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                        <span style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>{doc.qualification}</span>
+                        <span>{doc.experience} Years Exp.</span>
+                      </div>
+                      <p style={{ color: 'var(--text-dim)', fontSize: '0.8rem', marginBottom: '1.5rem', lineHeight: '1.4', height: '3.2em', overflow: 'hidden' }}>{doc.bio}</p>
                       <button 
                         className="btn-primary" 
                         style={{ fontSize: '0.875rem' }}
